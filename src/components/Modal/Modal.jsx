@@ -1,28 +1,28 @@
-import React, { Component } from 'react';
+import { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import css from './Modal.module.css';
 
-class Modal extends Component {
+const Modal = ({ closeModalByEscape, closeModalByOverlay, src, alt }) => {
 
-    componentDidMount() {
-        document.addEventListener('keydown', this.props.closeModalByEscape)
-    }
+    useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                closeModalByEscape();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [closeModalByEscape]);
 
-    componentWillUnmount() {
-        document.removeEventListener('keydown', this.props.closeModalByEscape)
-    }
-
-    render() {
-        const { src, alt, closeModalByOverlay } = this.props;
-
-        return (
-            <div className={css.overlay} onClick={closeModalByOverlay}>
-                <div className={css.modal}>
-                    <img src={src} alt={alt} />
-                </div>
+    return (
+        <div className={css.overlay} onClick={closeModalByOverlay}>
+            <div className={css.modal}>
+                <img src={src} alt={alt} />
             </div>
-        );
-    }
+        </div>
+    );
 };
 
 Modal.propTypes = {
@@ -32,4 +32,4 @@ Modal.propTypes = {
     closeModalByOverlay: PropTypes.func.isRequired
 };
 
-export default Modal
+export default Modal;

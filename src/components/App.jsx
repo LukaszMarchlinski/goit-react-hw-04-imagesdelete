@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
 import css from './App.module.css';
 import searchImages from 'services/pixabay';
 import Searchbar from './Searchbar/Searchbar';
@@ -8,97 +8,87 @@ import Loader from './Loader/Loader';
 import Button from './Button/Button';
 import Modal from './Modal/Modal';
 
-export class App extends Component {
-  state = {
-    query: '',
-    page: 1,
-    images: [],
-    totalHits: null,
-    isLoading: false,
-    isError: false,
-    isModalOpen: false,
-    modalURL: '',
-  };
+export const App = () => {
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [images, setImages] = useState([]);
+  const [totalHits, setTotalHits] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalURL, setModalURL] = useState('');
 
-  onSubmitInput = query => {
-    this.setState({ query: query });
-    const { page } = this.state;
+  const onSubmitInput = query => {
+    setQuery(query);
     searchImages(query, page);
+    setImages([]);
   };
 
-  showResponse = async () => {
-    const { query, page } = this.state;
+  const showResponse = async () => {
     try {
       const response = await searchImages(query, page);
-      this.setState(prevState => ({
-        totalHits: response.data.total,
-        images: [...prevState.images, ...response.data.hits],
-      }));
+      setTotalHits(response.data.total);
+      setImages(prev => [...prev, ...response.data.hits])
     } catch (error) {
-      this.setState({ isError: true, isLoading: false })
+      setIsError(true);
+      setIsLoading(false);
     } finally {
-      this.setState({ isLoading: false });
+      setIsLoading(false);
     }
   };
 
-  componentDidUpdate(_prevProps, prevState) {
-    const { query, page } = this.state;
-    if (prevState.page !== page) {
-      this.setState({ isLoading: true });
-      this.showResponse();
-    } else if (prevState.query !== query) {
-      this.setState({ isLoading: true });
-      this.setState({ images: [] });
-      this.showResponse();
-    }
+  useEffect(() => {
+if(query){
+    setIsLoading(true);
+    showResponse();
+}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, query]); 
+  
+
+  const loadMoreButton = e => {
+    setPage(prev => prev + 1);
   };
 
-  loadMoreButton = e => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
-  };
-
-  closeModalByEscape = e => {
+  const closeModalByEscape = e => {
     if (e.key === 'Escape') {
-      this.setState({ isModalOpen: false });
+      setIsModalOpen(false);
     }
   };
 
-  closeModalByOverlay = e => {
+  const closeModalByOverlay = e => {
     if (e.target.name !== 'IMG') {
-      this.setState({ isModalOpen: false });
+      setIsModalOpen(false);
     }
   };
 
-  imageClicked = e => {
+  const imageClicked = e => {
     e.preventDefault();
     const url = e.target.dataset['src'];
-    this.setState({ isModalOpen: true, modalURL: url });
+    setIsModalOpen(true);
+    setModalURL(url);
   };
 
+  let totalPages = Math.ceil(totalHits / 12);
 
-  render() {
-    const { query, images, totalHits, page, isLoading, isError, modalURL, isModalOpen } = this.state;
-    const totalPages = Math.ceil(totalHits / 12);
-
-    return (
-      <>
+  return (
+    <>
       <div className={css.App}>
-        <Searchbar onSubmitInput={this.onSubmitInput} />
+        <Searchbar onSubmitInput={onSubmitInput} />
         {images.length > 0 && (
           <ImageGallery>
-              <ImageGalleryItem images={images} onClick={this.imageClicked} />
+            <ImageGalleryItem images={images} onClick={imageClicked} />
           </ImageGallery>)
         }
         {isError && alert("Ups, coś poszło nie tak. Spróbuj wyszukać coś innego.")}
-        {isLoading && <Loader/>}
-        {page < totalPages && <Button loadMoreButton={this.loadMoreButton} titleButton={"Load more"} />}
-        </div>
-        {isModalOpen && <Modal
-          closeModalByEscape={this.closeModalByEscape}
-          closeModalByOverlay={this.closeModalByOverlay}
-          src={modalURL}
-          alt={query} />}
-        </>
-    );
-  };
-}
+        {isLoading && <Loader />}
+        {page < totalPages && <Button loadMoreButton={loadMoreButton} titleButton={"Load more"} />}
+      </div>
+      {isModalOpen && <Modal
+        closeModalByEscape={closeModalByEscape}
+        closeModalByOverlay={closeModalByOverlay}
+        src={modalURL}
+        alt={query} />}
+    </>
+  );
+};

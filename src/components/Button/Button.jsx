@@ -1,15 +1,10 @@
-import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import css from './Button.module.css';
 
-class Button extends Component {
-    render() {
-        const { loadMoreButton, titleButton } = this.props;
-
-        return (
-            <button className={css.buttonLoadMore} type="submit" onClick={loadMoreButton}>{titleButton}</button>
-        );
-    }
+const Button = ({ loadMoreButton, titleButton }) => {
+    return (
+        <button className={css.buttonLoadMore} type="submit" onClick={loadMoreButton}>{titleButton}</button>
+    );
 };
 
 Button.propTypes = {
@@ -17,4 +12,3 @@ Button.propTypes = {
 };
 
 export default Button
-

@@ -8,4 +8,4 @@ const ImageGallery = ({ children }) => {
     );
 };
 
-export default ImageGallery
+export default ImageGallery;
